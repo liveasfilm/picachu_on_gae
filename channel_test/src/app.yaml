@@ -1,0 +1,15 @@
+application: liveasfilm-test
+version: 1-1
+runtime: python
+api_version: 1
+
+handlers:
+- url: /images/(.*\.(gif|png|jpg))
+  static_files: static/\1
+  upload: static/(.*\.(gif|png|jpg))
+
+- url: /.*
+  script: channel_test.py
+
+- url: /index\.html
+  script: channel_test.py

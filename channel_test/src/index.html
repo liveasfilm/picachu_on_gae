@@ -1,0 +1,98 @@
+<html>
+<head>
+	<script>
+		var pica_idx = 0;
+		var pica_image = new Image();
+		var pica_width = 64;
+		var pica_height = 63;
+		var prev_x = 0;
+		var prev_y = 0;
+		var destX = {{ init_x }};
+		var destY = {{ init_y }};
+		window.onload = function(){
+			pica_image.src = "/images/pica.png";
+			setInterval(animatePica, 100);
+		};
+		
+		animatePica = function() {
+			var canvas = document.getElementById("stadium");
+			var context = canvas.getContext("2d");
+
+			pica_idx++;
+			movePica();
+		};
+		
+		movePica = function() {
+			var canvas = document.getElementById("stadium");
+			var context = canvas.getContext("2d");	
+			
+			context.clearRect(prev_x, prev_y, pica_width, pica_height);	
+			pica_idx = pica_idx % 5;
+			var sourceX = pica_idx * pica_width;
+			var sourceY = 0;
+			var destWidth = pica_width;
+			var destHeight = pica_height;
+			
+			context.drawImage(pica_image, sourceX, sourceY, pica_width, pica_height, destX, destY, destWidth, destHeight);
+			prev_x = destX;
+			prev_y = destY;			
+		}
+	</script>
+</head>
+<body onkeydown='keyDown(event)'>
+	<script type="text/javascript" src="/_ah/channel/jsapi"></script>
+	<script>
+		var connected = false;
+		var i = 0;
+		sendMessage = function(path, opt_param) {
+			path += '?' + opt_param;
+			var xhr = new XMLHttpRequest();
+			xhr.open('POST', path, true);
+			xhr.send();
+		};
+		
+		onOpened = function() {
+			connected = true;
+			document.getElementById('pannel').innerHTML = 'opened';
+		}; 	
+		
+		onClose = function() {
+			document.getElementById('pannel').innerHTML = 'closed';
+		}; 	
+		
+		onError = function() {
+			document.getElementById('pannel').innerHTML = 'error';
+		};
+		
+		onMessage = function(m) {
+			var msg = decodeURIComponent(m.data.split("+").join(" ")); 
+			document.getElementById('message').innerHTML = msg;
+			destX = parseInt(msg);
+			movePica();
+		};		
+		
+		keyDown = function(event) {
+			if (event.keyCode == 37) {
+				document.getElementById('keyinput').innerHTML = 'key input left';
+				sendMessage('process_key', 'key=' + 1)
+			}
+			if (event.keyCode == 39) {
+				document.getElementById('keyinput').innerHTML = 'key input right';
+				sendMessage('process_key', 'key=' + 5)
+			}			
+		};
+		
+		channel = new goog.appengine.Channel('{{ token }}');
+		socket = channel.open();
+		socket.onopen = onOpened;
+		socket.onmessage = onMessage;
+		socket.onerror = onError;
+		socket.onclose = onClose;	  		
+	</script>
+  	<div id=pannel>Test</div>
+  	<div id=keyinput>Test</div>
+  	<div id=message>Test</div>
+  	<canvas id="stadium" width="{{ canvas_width }}" height="{{ canvas_height }}" style="background-color:#8ED6FF;">
+  	</canvas>
+</body>
+</html>
